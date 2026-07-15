@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AFL Club Commerce Hub ~ Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F6F3EC; --paper-2:#EFEADF; --card:#FFFFFF; --raise:#F1ECE0;
+  --side:#2A2320; --side-2:#332A26; --side-text:#DCD2C6; --side-muted:#9C9186;
+  --ink:#2A2320; --text:#544B44; --muted:#8C8279; --faint:#A79D93;
+  --accent:#DD5B23; --accent-soft:#F6E3D6;
+  --up:#2E9E5B; --down:#CE4B34; --gold:#B98729; --blue:#3E7CA8;
+  --line:#E5DED0; --line-2:#D8CFBD;
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Figtree',system-ui,sans-serif;background:var(--paper);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.55;font-size:14.5px}
+.mono{font-family:'IBM Plex Mono',monospace}
+.pf{font-family:'Playfair Display',serif}
+a{color:inherit}
+::selection{background:var(--accent);color:#fff}
+
+/* shell */
+.app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+.side{position:sticky;top:0;height:100vh;background:var(--side);border-right:1px solid rgba(0,0,0,.15);display:flex;flex-direction:column;padding:22px 16px;overflow-y:auto}
+.brand{display:flex;gap:11px;align-items:center;padding:6px 8px 22px}
+.brand .mark{width:34px;height:34px;border-radius:9px;background:var(--accent);display:grid;place-items:center;flex:none;font-family:'Playfair Display';font-weight:700;font-size:19px;color:#fff}
+.brand .bt{font-family:'Playfair Display';font-weight:600;font-size:15px;color:#fff;line-height:1.15}
+.brand .bt small{display:block;font-family:'IBM Plex Mono';font-weight:500;font-size:9px;letter-spacing:.14em;color:var(--side-muted);margin-top:4px}
+.navlab{font-family:'IBM Plex Mono';font-size:9px;letter-spacing:.16em;color:var(--side-muted);text-transform:uppercase;padding:16px 10px 8px}
+.nav a{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:9px;color:var(--side-text);text-decoration:none;font-size:13.5px;font-weight:500;cursor:pointer;border-left:2px solid transparent}
+.nav a .ic{width:16px;text-align:center;font-size:13px;opacity:.85;flex:none}
+.nav a:hover{background:rgba(255,255,255,.05)}
+.nav a.active{background:rgba(221,91,35,.16);color:#fff;border-left-color:var(--accent)}
+.nav a.active .ic{color:var(--accent);opacity:1}
+.side-foot{margin-top:auto;padding:16px 10px 4px;border-top:1px solid rgba(255,255,255,.09);font-family:'IBM Plex Mono';font-size:10px;color:var(--side-muted);line-height:1.65}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:20;background:rgba(246,243,236,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:16px 34px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.topbar h1{font-family:'Playfair Display';font-weight:600;font-size:22px;letter-spacing:-.01em;color:var(--ink)}
+.topbar .crumb{font-family:'IBM Plex Mono';font-size:10px;color:var(--faint);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.demo-badge{font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.12em;color:var(--accent);border:1px solid var(--line-2);background:var(--accent-soft);padding:6px 11px;border-radius:100px}
+.content{padding:34px;max-width:1120px;width:100%}
+.panel{display:none}
+.panel.show{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* primitives */
+.eyebrow{font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:500;margin-bottom:12px}
+.h2{font-family:'Playfair Display';font-weight:600;font-size:23px;letter-spacing:-.01em;color:var(--ink);margin-bottom:8px}
+.h2.sm{font-size:17px}
+.lead{color:var(--text);font-size:15px;line-height:1.62;max-width:72ch}
+.welcome{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px 26px;margin-bottom:26px}
+.welcome .wt{font-family:'Playfair Display';font-style:italic;font-weight:500;font-size:22px;color:var(--ink);margin-bottom:8px}
+.sec{margin-top:40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;font-weight:600;font-size:13.5px;border:none;padding:11px 18px;border-radius:100px;cursor:pointer;font-family:'Figtree'}
+.btn:hover{filter:brightness(1.05)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line-2);font-weight:600}
+.btn.sm{padding:7px 13px;font-size:12px}
+.pill{font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.05em;padding:4px 9px;border-radius:100px;border:1px solid var(--line-2);color:var(--muted)}
+.pill.rec{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.pill.turf{color:var(--up);border-color:#BFE0CC;background:#E7F3EC}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px}
+.kpi .k-lab{font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.kpi .k-num{font-family:'Playfair Display';font-weight:600;font-size:30px;line-height:1.05;margin-top:10px;color:var(--ink)}
+.kpi .k-sub{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--faint);margin-top:8px}
+.kpi.accent{border-color:#EBC9B4;background:linear-gradient(180deg,var(--accent-soft),var(--card))}
+.kpi.accent .k-num{color:var(--accent)}
+.up{color:var(--up)}.down{color:var(--down)}
+
+/* quick cards */
+.qcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;cursor:pointer;transition:.18s;text-decoration:none;display:block}
+.qcard:hover{border-color:var(--line-2);transform:translateY(-2px);box-shadow:0 12px 30px -18px rgba(42,35,32,.25)}
+.qcard .qic{font-size:20px;color:var(--accent)}
+.qcard .qt{font-family:'Playfair Display';font-weight:600;font-size:17px;margin:12px 0 6px;color:var(--ink)}
+.qcard .qb{font-size:13px;color:var(--text);line-height:1.5}
+.qcard .qgo{font-family:'IBM Plex Mono';font-size:11px;color:var(--accent);margin-top:14px;letter-spacing:.04em}
+
+/* accordion */
+.acc{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--card)}
+.acc+.acc{margin-top:12px}
+.acc-h{display:flex;align-items:center;gap:14px;padding:18px 20px;cursor:pointer;user-select:none}
+.acc-h .num{font-family:'Playfair Display';font-weight:600;font-size:19px;color:var(--accent);min-width:30px}
+.acc-h .at{font-family:'Playfair Display';font-weight:600;font-size:16px;color:var(--ink)}
+.acc-h .chev{margin-left:auto;color:var(--muted);transition:.25s;font-size:12px}
+.acc.open .chev{transform:rotate(90deg)}
+.acc-b{max-height:0;overflow:hidden;transition:max-height .35s ease}
+.acc.open .acc-b{max-height:760px}
+.acc-b-inner{padding:0 20px 20px 64px}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:11px}
+.checklist li{display:flex;gap:12px;font-size:13.5px;color:var(--text);line-height:1.5;align-items:flex-start}
+.checklist li b{color:var(--ink);font-weight:600}
+.checklist li .box{flex:none;width:18px;height:18px;border-radius:5px;border:1.5px solid var(--line-2);margin-top:1px;display:grid;place-items:center;font-size:11px;cursor:pointer;color:transparent}
+.checklist li .box.on{background:var(--up);border-color:var(--up);color:#fff}
+
+/* table */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:500;padding:0 14px 12px;border-bottom:1px solid var(--line)}
+td{padding:11px 14px;border-bottom:1px solid var(--line);color:var(--text)}
+tr:hover td{background:var(--raise)}
+td.club{color:var(--ink);font-weight:600}
+td.num{font-family:'IBM Plex Mono';text-align:right;color:var(--ink)}
+th.num{text-align:right}
+.rank{font-family:'IBM Plex Mono';color:var(--faint)}
+
+/* barlist */
+.barlist{display:flex;flex-direction:column;gap:9px}
+.brow{display:grid;grid-template-columns:130px 1fr 92px;gap:14px;align-items:center}
+.brow .bn{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brow .btr{height:20px;border-radius:6px;background:var(--paper-2);overflow:hidden}
+.brow .bfl{height:100%;border-radius:6px;background:var(--accent);width:0;transition:width .9s cubic-bezier(.2,.7,.2,1)}
+.brow.mine .bfl{background:var(--gold)}
+.brow.mine .bn{color:var(--gold)}
+.brow .bv{font-family:'IBM Plex Mono';font-size:12px;text-align:right;color:var(--ink)}
+
+/* controls */
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:22px}
+.seg{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:100px;padding:3px}
+.seg button{background:none;border:none;color:var(--muted);font-family:'IBM Plex Mono';font-size:12px;padding:7px 14px;border-radius:100px;cursor:pointer;letter-spacing:.02em}
+.seg button.on{background:var(--accent);color:#fff;font-weight:600}
+select{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:100px;padding:9px 16px;font-family:'IBM Plex Mono';font-size:12px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238C8279' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:34px}
+input[type=text]{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:100px;padding:9px 16px;font-family:'IBM Plex Mono';font-size:12px}
+input::placeholder{color:var(--faint)}
+
+/* code */
+pre.code{background:var(--paper-2);border:1px solid var(--line);border-radius:10px;padding:16px;font-family:'IBM Plex Mono';font-size:12px;line-height:1.65;color:#463d37;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+.tok{color:var(--accent)}
+.copywrap{position:relative}
+.copybtn{position:absolute;top:10px;right:10px}
+
+/* email card */
+.mailcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.mailcard .mh{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mailcard .msub{font-family:'Playfair Display';font-weight:600;font-size:15px;color:var(--ink)}
+.mailcard .mmeta{font-family:'IBM Plex Mono';font-size:10px;color:var(--faint);margin-top:3px;letter-spacing:.04em}
+
+/* theme card */
+.theme{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.theme .prev{height:110px;position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.theme .tbody{padding:20px;display:flex;flex-direction:column;flex:1}
+.theme .tname{font-family:'Playfair Display';font-weight:600;font-size:18px;color:var(--ink)}
+.theme .tver{font-family:'IBM Plex Mono';font-size:10px;color:var(--faint);margin-top:2px}
+.theme ul{list-style:none;margin:14px 0 18px;display:flex;flex-direction:column;gap:8px}
+.theme li{font-size:12.5px;color:var(--text);display:flex;gap:9px}
+.theme li::before{content:"+";color:var(--up);font-weight:700}
+.theme .btn{margin-top:auto}
+
+/* brand kit */
+.bk{display:grid;grid-template-columns:300px 1fr;gap:22px}
+.bk-controls label{display:block;font-family:'IBM Plex Mono';font-size:10.5px;color:var(--muted);letter-spacing:.05em;margin:16px 0 7px;text-transform:uppercase}
+.bk-controls label:first-child{margin-top:0}
+.swatchrow{display:flex;gap:8px;align-items:center}
+.swatchrow input[type=color]{width:42px;height:34px;border:1px solid var(--line);border-radius:8px;background:none;cursor:pointer;padding:2px}
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.preset{width:30px;height:30px;border-radius:8px;cursor:pointer;border:1px solid var(--line-2)}
+.bk-preview{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:#fff;min-height:360px;color:#111}
+.store-head{padding:16px 22px;display:flex;align-items:center;justify-content:space-between;color:#fff}
+.store-logo{font-family:'Playfair Display';font-weight:700;font-size:20px}
+.store-nav{display:flex;gap:18px;font-size:12px;opacity:.9;font-weight:600}
+.store-hero{padding:44px 22px;text-align:center}
+.store-hero h3{font-family:'Playfair Display';font-size:26px;font-weight:600;margin-bottom:10px}
+.store-hero p{color:#555;font-size:14px;margin-bottom:20px}
+.store-cta{display:inline-block;padding:12px 26px;border-radius:100px;font-weight:700;font-size:14px;color:#fff}
+.store-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0 22px 26px}
+.pcard{border:1px solid #eee;border-radius:10px;overflow:hidden}
+.pcard .pi{height:70px}
+.pcard .pd{padding:10px}
+.pcard .pn{font-size:12px;font-weight:700;color:#222}
+.pcard .pp{font-size:12px;font-weight:800;margin-top:3px}
+
+/* dropzone */
+.drop{border:2px dashed var(--line-2);border-radius:var(--r);padding:44px;text-align:center;transition:.2s;cursor:pointer;background:var(--card)}
+.drop.hover{border-color:var(--accent);background:var(--accent-soft)}
+.drop .di{font-size:30px;color:var(--accent)}
+.drop .dt{font-family:'Playfair Display';font-weight:600;font-size:16px;color:var(--ink);margin-top:12px}
+.drop .db{font-size:13px;color:var(--muted);margin-top:6px}
+
+/* toast */
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--ink);border:1px solid var(--side-2);color:#fff;padding:12px 20px;border-radius:100px;font-size:13.5px;font-weight:600;opacity:0;transition:.3s;z-index:100;pointer-events:none;box-shadow:0 16px 40px -18px rgba(0,0,0,.4)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--up);margin-right:9px}
+
+.hint{font-family:'IBM Plex Mono';font-size:11px;color:var(--faint);margin-top:8px;letter-spacing:.03em}
+.note{background:var(--accent-soft);border:1px solid #EBC9B4;border-radius:10px;padding:14px 16px;font-size:13px;color:#6b4a37;line-height:1.55}
+.note b{color:var(--accent)}
+
+.menu-btn{display:none}
+@media (max-width:920px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;left:0;top:0;z-index:60;width:250px;transform:translateX(-100%);transition:.28s}
+  .side.open{transform:none}
+  .menu-btn{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:9px;border:1px solid var(--line-2);background:var(--card);color:var(--ink);cursor:pointer;font-size:18px}
+  .content{padding:22px}.topbar{padding:14px 22px}
+  .kpis,.g4{grid-template-columns:repeat(2,1fr)}.g3,.g2{grid-template-columns:1fr}
+  .bk{grid-template-columns:1fr}.brow{grid-template-columns:96px 1fr 78px}
+  .scrim{position:fixed;inset:0;background:rgba(42,35,32,.4);z-index:55;display:none}
+  .scrim.on{display:block}
+}
+
+/* guide wiki */
+.guidewiki{display:grid;grid-template-columns:210px 1fr;gap:22px;align-items:start}
+.gtopics{display:flex;flex-direction:column;gap:4px;position:sticky;top:90px}
+.gtopics button{text-align:left;background:none;border:none;border-left:2px solid transparent;padding:9px 12px;border-radius:8px;color:var(--muted);font-family:'Figtree';font-size:13.5px;font-weight:500;cursor:pointer}
+.gtopics button:hover{background:var(--card);color:var(--ink)}
+.gtopics button.on{background:var(--card);border-left-color:var(--accent);color:var(--accent);font-weight:600}
+.garticle .gah{font-family:'Playfair Display';font-weight:600;font-size:20px;color:var(--ink);margin-bottom:6px}
+.garticle .gaintro{font-size:14px;color:var(--text);margin-bottom:14px;line-height:1.6}
+.gstep{display:grid;grid-template-columns:auto 1fr;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.gstep .gsn{font-family:'IBM Plex Mono';font-size:12px;color:var(--accent);padding-top:2px}
+.gstep .gst{font-weight:600;color:var(--ink);font-size:14px;margin-bottom:3px}
+.gstep .gsb{font-size:13px;color:var(--text);line-height:1.55}
+.checkcols{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:6px}
+.checkcol h4{font-family:'Playfair Display';font-weight:600;font-size:15px;color:var(--ink);margin-bottom:10px}
+.checkcol ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.checkcol li{font-size:13px;color:var(--text);display:flex;gap:8px;line-height:1.4}
+.checkcol li::before{content:"○";color:var(--accent)}
+
+/* email preview */
+.emailprev{max-width:420px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 14px 40px -24px rgba(42,35,32,.4)}
+.ep-head{padding:22px;text-align:center;color:#fff}
+.ep-logo{font-family:'Playfair Display';font-weight:700;font-size:20px;letter-spacing:.02em}
+.ep-body{padding:24px 22px;color:#333}
+.ep-h{font-size:16px;font-weight:700;margin-bottom:10px;color:#222}
+.ep-p{font-size:13px;line-height:1.65;color:#555;margin-bottom:14px}
+.ep-order{border:1px solid #eee;border-radius:10px;padding:14px;margin:14px 0}
+.ep-line{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:#444}
+.ep-line.tot{border-top:1px solid #eee;margin-top:6px;padding-top:8px;font-weight:700;color:#222}
+.ep-btn{display:block;text-align:center;color:#fff;font-weight:700;font-size:14px;padding:12px;border-radius:100px;margin:16px 0 6px;text-decoration:none}
+.ep-foot{padding:16px 22px;text-align:center;font-size:11px;color:#999;background:#fafafa}
+.brandtoggle{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.brandtoggle .bt-lab{font-family:'IBM Plex Mono';font-size:11px;color:var(--muted);letter-spacing:.04em}
+.brandtoggle .bt-sw{width:26px;height:26px;border-radius:7px;cursor:pointer;border:2px solid transparent}
+.brandtoggle .bt-sw.on{border-color:var(--ink)}
+
+/* product mockup */
+.pmock{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff;color:#222}
+.pmock .pm-vis{background:linear-gradient(160deg,#12324F,#0A1E30);display:flex;align-items:center;justify-content:center;padding:30px;min-height:330px}
+.jersey{width:200px;height:240px;border-radius:14px 14px 20px 20px;position:relative;background:#C8102E;box-shadow:0 20px 50px -20px rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;padding-top:26px}
+.jersey .collar{width:60px;height:20px;border-radius:0 0 40px 40px;background:rgba(255,255,255,.92);margin-bottom:28px}
+.jersey .jname{font-family:'Figtree';font-weight:800;font-size:19px;letter-spacing:.08em;color:#fff;text-transform:uppercase;min-height:23px}
+.jersey .jnum{font-family:'Figtree';font-weight:800;font-size:60px;line-height:1;color:#fff;margin-top:4px}
+.jersey .sleeve{position:absolute;top:16px;width:42px;height:66px;background:inherit;border-radius:8px}
+.jersey .sleeve.l{left:-28px;transform:rotate(14deg)}.jersey .sleeve.r{right:-28px;transform:rotate(-14deg)}
+.pmock .pm-info{padding:26px}
+.pm-info .pm-t{font-family:'Playfair Display';font-weight:600;font-size:22px;color:#1a1a1a}
+.pm-info .pm-price{font-size:18px;font-weight:700;color:#1a1a1a;margin:6px 0 8px}
+.pm-info label{display:block;font-size:11px;font-weight:600;color:#555;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.04em}
+.pm-info input,.pm-info select{width:100%;padding:11px 14px;border:1px solid #ddd;border-radius:8px;font-family:'Figtree';font-size:14px;color:#222}
+.pm-info .pm-cta{display:block;width:100%;text-align:center;background:#12324F;color:#fff;font-weight:700;font-size:15px;padding:14px;border-radius:100px;border:none;margin-top:20px;cursor:pointer}
+.pm-hint{font-size:11px;color:#999;margin-top:8px}
+
+/* page template tabs */
+.pt-tabs{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:100px;padding:3px;margin-bottom:16px}
+.pt-tabs button{background:none;border:none;color:var(--muted);font-family:'IBM Plex Mono';font-size:12px;padding:8px 16px;border-radius:100px;cursor:pointer}
+.pt-tabs button.on{background:var(--accent);color:#fff;font-weight:600}
+.ptpage{background:#fff;border:1px solid var(--line);border-radius:14px;padding:30px 32px;color:#333;display:none}
+.ptpage.show{display:block}
+.ptpage h3{font-family:'Playfair Display';font-weight:600;font-size:22px;color:#1a1a1a;margin-bottom:6px}
+.ptpage .ptsub{font-size:13px;color:#888;margin-bottom:20px}
+.ptpage table{font-size:13px}
+.ptpage th,.ptpage td{color:#333;border-color:#eee;padding:10px 12px}
+.ptpage th{color:#888}
+.ptpage p{font-size:13.5px;line-height:1.7;color:#555;margin-bottom:12px}
+.ptpage .ptgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.ptcard{border:1px solid #eee;border-radius:10px;padding:16px}
+.ptcard .pth{font-weight:700;font-size:14px;color:#222;margin-bottom:4px}
+.ptcard .ptb{font-size:12.5px;color:#666;line-height:1.5}
+
+@media (max-width:920px){
+  .guidewiki{grid-template-columns:1fr}.gtopics{position:static;flex-direction:row;flex-wrap:wrap}
+  .pmock{grid-template-columns:1fr}.checkcols,.ptpage .ptgrid{grid-template-columns:1fr}
+}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side">
+    <div class="brand">
+      <div class="mark">A</div>
+      <div class="bt">Club Commerce Hub<small>AFL · WORKING DEMO</small></div>
+    </div>
+    <div class="nav">
+      <div class="navlab">Run your store</div>
+      <a data-route="overview"><span class="ic">◎</span> Overview</a>
+      <a data-route="guide"><span class="ic">▤</span> Shopify Guide</a>
+      <a data-route="themes"><span class="ic">◈</span> Themes</a>
+      <a data-route="templates"><span class="ic">▥</span> Templates</a>
+      <a data-route="emails"><span class="ic">✉</span> Email Templates</a>
+      <a data-route="brand"><span class="ic">◑</span> Brand Kit</a>
+      <a data-route="apps"><span class="ic">⊞</span> App Stack</a>
+    </div>
+    <div class="nav">
+      <div class="navlab">Insights</div>
+      <a data-route="reports"><span class="ic">▦</span> Reports</a>
+      <a data-route="upload"><span class="ic">⇪</span> Upload &amp; Dashboard</a>
+    </div>
+    <div class="side-foot">Concept build for the AFL.<br>Not a live environment.<br>© 2026 · Prepared by G. Morris</div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:14px">
+        <button class="menu-btn" id="menuBtn">☰</button>
+        <div><div class="crumb" id="crumb">Run your store</div><h1 id="ptitle">Overview</h1></div>
+      </div>
+      <div class="demo-badge">● DEMO · SAMPLE DATA</div>
+    </div>
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <section class="panel" data-panel="overview">
+        <div class="welcome">
+          <div class="wt">Welcome to the Club Commerce Hub.</div>
+          <p class="lead">One place for every club to run a great Shopify store: guides, downloadable themes, templates, a brand kit, a vetted app stack, and live reporting that builds on the monthly pack. Here is the competition at a glance for the latest reporting month.</p>
+        </div>
+        <div class="controls" style="margin-bottom:16px">
+          <span class="pill">Latest month · February 2026</span>
+          <span class="pill turf">16 club stores active</span>
+        </div>
+        <div class="kpis" id="ovKpis"></div>
+        <div class="sec">
+          <div class="h2 sm">Jump in</div>
+          <div class="grid g3" style="margin-top:14px">
+            <a class="qcard" data-route="guide"><div class="qic">▤</div><div class="qt">Set up your store</div><div class="qb">A plain-English reference for running your store, tuned for Australian clubs.</div><div class="qgo">Open guide →</div></a>
+            <a class="qcard" data-route="themes"><div class="qic">◈</div><div class="qt">Download a theme</div><div class="qb">Ready-built club store designs with guernsey personalisation and game-day drops built in.</div><div class="qgo">Browse themes →</div></a>
+            <a class="qcard" data-route="reports"><div class="qic">▦</div><div class="qt">See your numbers</div><div class="qb">Live cross-club reporting. Filter by month, club and product, in seconds.</div><div class="qgo">Open reports →</div></a>
+          </div>
+        </div>
+      </section>
+
+      <!-- GUIDE -->
+      <section class="panel" data-panel="guide">
+        <div class="eyebrow">Shopify guide</div>
+        <div class="h2">A reference for running your store.</div>
+        <p class="lead">Look up how to do the everyday things, written in plain English for club stores. Pick a topic.</p>
+        <div class="sec guidewiki">
+          <div class="gtopics" id="gtopics"></div>
+          <div class="garticle card" id="garticle"></div>
+        </div>
+      </section>
+
+      <!-- THEMES -->
+      <section class="panel" data-panel="themes">
+        <div class="eyebrow">Themes</div>
+        <div class="h2">Club-ready store designs.</div>
+        <p class="lead">Downloadable Shopify themes purpose-built for AFL clubs: fast, mobile-first and consistent, with the club-specific mechanics already wired in. Drop in your brand kit and launch.</p>
+        <div class="sec grid g3" id="themeGrid"></div>
+        <div class="note sec">In the full build, each theme ships as a versioned <b>.zip</b> with setup docs and is maintained centrally, so a fix or upgrade rolls out to every club at once.</div>
+      </section>
+
+      <!-- TEMPLATES -->
+      <section class="panel" data-panel="templates">
+        <div class="eyebrow">Templates</div>
+        <div class="h2">Product &amp; page templates, ready to use.</div>
+        <p class="lead">Pre-built pages every club needs, including a guernsey personaliser and Australian support pages, so no club rebuilds the same thing from scratch. Here is how they look in a store.</p>
+        <div class="sec">
+          <div class="h2 sm">Product templates</div>
+          <div class="grid g3" style="margin-top:14px">
+            <div class="card"><span class="pill rec">Personalisation</span><div style="font-family:'Playfair Display';font-weight:600;font-size:16px;color:var(--ink);margin:12px 0 6px">Guernsey personaliser</div><div style="font-size:13px;color:var(--text)">Name and number with a live preview, character limits and a print-ready order note.</div></div>
+            <div class="card"><span class="pill">Apparel</span><div style="font-family:'Playfair Display';font-weight:600;font-size:16px;color:var(--ink);margin:12px 0 6px">Apparel + size guide</div><div style="font-size:13px;color:var(--text)">Size and fit options, a size guide, and fit notes to help cut returns.</div></div>
+            <div class="card"><span class="pill">Bundle</span><div style="font-family:'Playfair Display';font-weight:600;font-size:16px;color:var(--ink);margin:12px 0 6px">Drop &amp; bundle</div><div style="font-size:13px;color:var(--text)">Countdown, scarcity and multi-buy bundles for game-day launches.</div></div>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="h2 sm">Guernsey personaliser ~ product page preview</div>
+          <p class="lead" style="font-size:13.5px;margin-bottom:14px">Type a name and number to see it update on the jersey, exactly as a fan would.</p>
+          <div class="pmock">
+            <div class="pm-vis">
+              <div class="jersey"><span class="sleeve l"></span><span class="sleeve r"></span><div class="collar"></div><div class="jname" id="jName">MORRIS</div><div class="jnum" id="jNum">12</div></div>
+            </div>
+            <div class="pm-info">
+              <div class="pm-t">2026 Home Guernsey</div>
+              <div class="pm-price">$180.00</div>
+              <label>Name on back (max 12)</label>
+              <input id="pmName" maxlength="12" value="MORRIS">
+              <label>Number (1 to 99)</label>
+              <input id="pmNum" type="number" min="1" max="99" value="12">
+              <label>Size</label>
+              <select><option>S</option><option>M</option><option selected>L</option><option>XL</option><option>2XL</option></select>
+              <button class="pm-cta">Add to cart ~ $180.00</button>
+              <div class="pm-hint">Personalisation adds 5 to 7 business days. An order note is generated automatically for fulfilment.</div>
+            </div>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="h2 sm">Page templates ~ preview</div>
+          <div class="pt-tabs" id="ptTabs" style="margin-top:10px">
+            <button data-pt="size" class="on">Size guide</button>
+            <button data-pt="returns">Returns</button>
+            <button data-pt="shipping">Shipping</button>
+          </div>
+          <div id="ptSize" class="ptpage show">
+            <h3>Size guide</h3><div class="ptsub">Adult apparel · measurements in centimetres</div>
+            <table><thead><tr><th>Size</th><th>Chest</th><th>Length</th><th>Fit</th></tr></thead><tbody>
+              <tr><td>S</td><td>96 to 101</td><td>71</td><td>Slim</td></tr>
+              <tr><td>M</td><td>102 to 107</td><td>73</td><td>Regular</td></tr>
+              <tr><td>L</td><td>108 to 113</td><td>75</td><td>Regular</td></tr>
+              <tr><td>XL</td><td>114 to 119</td><td>77</td><td>Relaxed</td></tr>
+              <tr><td>2XL</td><td>120 to 127</td><td>79</td><td>Relaxed</td></tr>
+            </tbody></table>
+            <p style="margin-top:14px">Between sizes? Size up for a relaxed fit. Guernseys are true to size.</p>
+          </div>
+          <div id="ptReturns" class="ptpage">
+            <h3>Returns &amp; exchanges</h3><div class="ptsub">Australian Consumer Law friendly</div>
+            <p>We want you in the right gear. Return unworn items with tags within 30 days for a refund or exchange.</p>
+            <div class="ptgrid">
+              <div class="ptcard"><div class="pth">What you can return</div><div class="ptb">Unworn, unwashed items with tags attached, in their original packaging.</div></div>
+              <div class="ptcard"><div class="pth">Personalised items</div><div class="ptb">Guernseys with a name or number cannot be returned unless faulty.</div></div>
+              <div class="ptcard"><div class="pth">How to start</div><div class="ptb">Reply to your order email, or contact the club store with your order number.</div></div>
+              <div class="ptcard"><div class="pth">Faulty items</div><div class="ptb">Always covered under Australian Consumer Law, whenever you bought them.</div></div>
+            </div>
+          </div>
+          <div id="ptShipping" class="ptpage">
+            <h3>Shipping</h3><div class="ptsub">Sent with Australia Post</div>
+            <table><thead><tr><th>Service</th><th>Time</th><th>Cost</th></tr></thead><tbody>
+              <tr><td>Standard</td><td>3 to 7 business days</td><td>$10.00</td></tr>
+              <tr><td>Express</td><td>1 to 3 business days</td><td>$15.00</td></tr>
+              <tr><td>Free standard</td><td>3 to 7 business days</td><td>Orders over $150</td></tr>
+              <tr><td>Local pickup</td><td>Ready in 1 to 2 days</td><td>Free at the club store</td></tr>
+            </tbody></table>
+            <p style="margin-top:14px">Orders are dispatched Monday to Friday. Personalised items add 5 to 7 days.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- EMAILS -->
+      <section class="panel" data-panel="emails">
+        <div class="eyebrow">Email templates</div>
+        <div class="h2">Six branded transactional emails.</div>
+        <p class="lead">The core Shopify notifications, rewritten to sound like a club. Below left is how the order confirmation renders once a club's brand kit is applied; on the right are the copy-ready templates you paste into Shopify.</p>
+        <div class="sec grid g2" style="align-items:start">
+          <div>
+            <div class="brandtoggle"><span class="bt-lab">Preview with brand kit</span><div id="epToggle" style="display:flex;gap:8px"></div></div>
+            <div class="emailprev" id="emailPrev"></div>
+          </div>
+          <div>
+            <div class="note" style="margin-bottom:16px">The preview updates with each club's <b>brand kit</b> ~ their colours and name flow through every email automatically, so all six notifications stay on brand with no design work.</div>
+            <div style="font-size:13px;color:var(--muted);line-height:1.6">The six templates below are the copy-ready versions with merge fields (the <span class="mono">{{ }}</span> tokens Shopify fills in per order). Paste a body into Shopify, Settings, Notifications, swap the club token, and it is done.</div>
+          </div>
+        </div>
+        <div class="sec grid g2" id="mailGrid"></div>
+      </section>
+
+      <!-- BRAND KIT -->
+      <section class="panel" data-panel="brand">
+        <div class="eyebrow">Brand kit</div>
+        <div class="h2">Set your colours once. Preview the store live.</div>
+        <p class="lead">Each club defines its palette, type and logo here. The theme reads the kit, so every touchpoint stays on-brand automatically: storefront, emails, buttons. Try it:</p>
+        <div class="sec bk">
+          <div class="bk-controls card">
+            <label>Club name</label>
+            <input type="text" id="bkName" value="Your Club FC" style="width:100%">
+            <label>Primary</label>
+            <div class="swatchrow"><input type="color" id="bkPrimary" value="#12324F"><span class="mono" id="bkPrimaryHex" style="font-size:12px;color:var(--muted)">#12324F</span></div>
+            <label>Accent</label>
+            <div class="swatchrow"><input type="color" id="bkAccent" value="#E4A32B"><span class="mono" id="bkAccentHex" style="font-size:12px;color:var(--muted)">#E4A32B</span></div>
+            <label>Heading font</label>
+            <select id="bkFont" style="width:100%">
+              <option value="'Playfair Display',serif">Playfair ~ editorial</option>
+              <option value="'Figtree',sans-serif">Figtree ~ modern</option>
+              <option value="Georgia,serif">Georgia ~ heritage</option>
+            </select>
+            <label>Presets</label>
+            <div class="presets" id="bkPresets"></div>
+          </div>
+          <div class="bk-preview" id="bkPreview">
+            <div class="store-head" id="bkHead">
+              <div class="store-logo" id="bkLogo">YOUR CLUB FC</div>
+              <div class="store-nav"><span>Shop</span><span>Members</span><span>Guernseys</span></div>
+            </div>
+            <div class="store-hero">
+              <h3 id="bkHero">2026 Membership Range</h3>
+              <p>New season. New gear. Wear your colours.</p>
+              <span class="store-cta" id="bkCta">Shop the range</span>
+            </div>
+            <div class="store-cards">
+              <div class="pcard"><div class="pi" id="bkP1"></div><div class="pd"><div class="pn">Member Scarf</div><div class="pp" id="bkPr1">$40</div></div></div>
+              <div class="pcard"><div class="pi" id="bkP2"></div><div class="pd"><div class="pn">Home Guernsey</div><div class="pp" id="bkPr2">$180</div></div></div>
+              <div class="pcard"><div class="pi" id="bkP3"></div><div class="pd"><div class="pn">Member Cap</div><div class="pp" id="bkPr3">$35</div></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- APPS -->
+      <section class="panel" data-panel="apps">
+        <div class="eyebrow">App stack</div>
+        <div class="h2">A vetted app stack, so clubs start strong.</div>
+        <p class="lead">A shortlist of apps that work well for club retail, reviewed centrally so every club starts from the same solid base.</p>
+        <div class="sec grid g2" id="appGrid"></div>
+      </section>
+
+      <!-- REPORTS -->
+      <section class="panel" data-panel="reports">
+        <div class="eyebrow">Reports</div>
+        <div class="h2">The monthly pack, made live.</div>
+        <p class="lead">Every club's online performance in one filterable view: the same numbers shared each month, now interactive. Filter by month and club; switch the metric to re-rank the ladder.</p>
+        <div class="sec">
+          <div class="controls">
+            <div class="seg" id="monthSeg">
+              <button data-m="Jan">January</button>
+              <button data-m="Feb" class="on">February</button>
+              <button data-m="YTD">YTD</button>
+            </div>
+            <select id="clubSel"></select>
+            <div class="seg" id="metricSeg" style="margin-left:auto">
+              <button data-metric="grossSales" class="on">Gross sales</button>
+              <button data-metric="nett">Nett</button>
+              <button data-metric="fee">Platform fee</button>
+            </div>
+          </div>
+          <div class="kpis" id="repKpis"></div>
+        </div>
+        <div class="sec grid g2">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px">
+              <div class="h2 sm" id="ladderTitle" style="margin:0">Clubs by gross sales</div>
+              <span class="pill" id="ladderMonth">February</span>
+            </div>
+            <div class="barlist" id="repLadder"></div>
+          </div>
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px"><div class="h2 sm" style="margin:0">Top products</div><span class="pill" id="prodMonth">February</span></div>
+            <div style="max-height:360px;overflow-y:auto">
+              <table><thead><tr><th>#</th><th>Product</th><th>Club</th><th class="num">Revenue</th></tr></thead><tbody id="prodBody"></tbody></table>
+            </div>
+          </div>
+        </div>
+        <div class="sec card" id="clubDetail" style="display:none"></div>
+        <div class="note sec">This runs on the AFL's actual export data for Jan and Feb 2026. In the live build it refreshes automatically from each club's Shopify, so the picture is always current.</div>
+      </section>
+
+      <!-- UPLOAD -->
+      <section class="panel" data-panel="upload">
+        <div class="eyebrow">Upload &amp; dashboard</div>
+        <div class="h2">Drop in a Shopify export, get a clean dashboard.</div>
+        <p class="lead">Set up one standard Shopify report, and each club exports it and drops the CSV here. The portal turns rows of data into a readable monthly picture: no spreadsheets, no formulas.</p>
+        <div class="sec">
+          <div class="drop" id="drop">
+            <div class="di">⇪</div>
+            <div class="dt">Drop a CSV here, or click to browse</div>
+            <div class="db">Expects a label column (e.g. Product) and a sales/revenue column</div>
+            <input type="file" id="fileInput" accept=".csv" hidden>
+          </div>
+          <div class="controls" style="margin-top:16px">
+            <button class="btn" id="loadSample">Load sample export</button>
+            <button class="btn ghost" id="dlSample">Download sample CSV</button>
+          </div>
+        </div>
+        <div id="uploadResult" style="display:none">
+          <div class="sec kpis" id="upKpis"></div>
+          <div class="sec card">
+            <div class="h2 sm" id="upTitle" style="margin-bottom:16px">Top lines</div>
+            <div class="barlist" id="upBars"></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+<div id="toast"><span class="dot"></span><span id="toastMsg">Copied</span></div>
+
+<script>
+var DATA = {"months":{"Jan":[{"club":"Adelaide","grossSales":37922.28,"grossRev":25969.18,"fee":942.69,"nett":24047.72},{"club":"Brisbane","grossSales":78265.64,"grossRev":61171.94,"fee":2220.55,"nett":55769.29},{"club":"Carlton","grossSales":133205.21,"grossRev":68688.3,"fee":2493.35,"nett":63238.74},{"club":"Collingwood","grossSales":125131.66,"grossRev":124458.41,"fee":4465.07,"nett":96909.02},{"club":"Fremantle","grossSales":28464.15,"grossRev":21134.6,"fee":767.19,"nett":18211.8},{"club":"Geelong","grossSales":32284.14,"grossRev":31146.64,"fee":1130.63,"nett":28471.59},{"club":"Gold Coast","grossSales":17304.45,"grossRev":15916.25,"fee":577.76,"nett":14683.77},{"club":"GWS","grossSales":14339.23,"grossRev":10880.48,"fee":394.96,"nett":9922.34},{"club":"Hawthorn","grossSales":109807.98,"grossRev":71900.52,"fee":2536.3,"nett":54177.96},{"club":"Melbourne","grossSales":8726.85,"grossRev":8576.85,"fee":311.34,"nett":8173.73},{"club":"North Melbourne","grossSales":50504.83,"grossRev":22960.1,"fee":833.46,"nett":18846.15},{"club":"Port Adelaide","grossSales":14300.99,"grossRev":14089.49,"fee":511.45,"nett":12330.09},{"club":"St Kilda","grossSales":55386.75,"grossRev":37039.0,"fee":1344.52,"nett":32264.79},{"club":"Sydney","grossSales":45698.72,"grossRev":38414.57,"fee":1347.67,"nett":30327.17},{"club":"West Coast","grossSales":86869.85,"grossRev":43751.35,"fee":1588.18,"nett":40507.96},{"club":"Western Bulldogs","grossSales":19288.5,"grossRev":16688.5,"fee":605.8,"nett":15477.6}],"Feb":[{"club":"Adelaide","grossSales":49994.36,"grossRev":35268.26,"fee":1280.24,"nett":33705.68},{"club":"Brisbane","grossSales":78648.03,"grossRev":58724.34,"fee":2131.7,"nett":55836.19},{"club":"Carlton","grossSales":203494.49,"grossRev":124647.6,"fee":4524.66,"nett":116366.04},{"club":"Collingwood","grossSales":365767.34,"grossRev":363516.12,"fee":13136.3,"nett":277964.18},{"club":"Fremantle","grossSales":36065.3,"grossRev":29025.39,"fee":1053.63,"nett":23396.31},{"club":"Geelong","grossSales":44197.05,"grossRev":43837.05,"fee":1591.3,"nett":40455.54},{"club":"Gold Coast","grossSales":31164.1,"grossRev":30914.1,"fee":1122.18,"nett":29044.22},{"club":"GWS","grossSales":22088.63,"grossRev":17071.55,"fee":619.7,"nett":16132.74},{"club":"Hawthorn","grossSales":127546.2,"grossRev":92293.45,"fee":3295.71,"nett":71754.36},{"club":"Melbourne","grossSales":20479.25,"grossRev":17941.45,"fee":651.28,"nett":16890.56},{"club":"North Melbourne","grossSales":48781.34,"grossRev":26290.99,"fee":950.74,"nett":20973.87},{"club":"Port Adelaide","grossSales":82276.59,"grossRev":81497.09,"fee":2958.35,"nett":77436.23},{"club":"St Kilda","grossSales":83437.92,"grossRev":60572.02,"fee":2198.77,"nett":49355.18},{"club":"Sydney","grossSales":54063.13,"grossRev":46813.83,"fee":1643.05,"nett":38173.83},{"club":"West Coast","grossSales":85190.44,"grossRev":50065.26,"fee":1817.38,"nett":46427.43},{"club":"Western Bulldogs","grossSales":48798.4,"grossRev":32015.4,"fee":1162.17,"nett":30387.03}]},"ytd":[{"club":"Adelaide","grossSales":289058.5,"grossRev":217248.32,"fee":7886.14,"nett":205286.4},{"club":"Brisbane","grossSales":476981.55,"grossRev":416681.28,"fee":15125.55,"nett":388937.14},{"club":"Carlton","grossSales":913506.39,"grossRev":556871.0,"fee":20214.2,"nett":520015.96},{"club":"Collingwood","grossSales":875030.09,"grossRev":867156.4,"fee":31269.28,"nett":686368.46},{"club":"Fremantle","grossSales":187407.69,"grossRev":162246.28,"fee":5889.6,"nett":138654.05},{"club":"Geelong","grossSales":230441.94,"grossRev":227330.65,"fee":8252.18,"nett":210865.23},{"club":"Gold Coast","grossSales":144045.55,"grossRev":142018.35,"fee":5155.28,"nett":134146.96},{"club":"GWS","grossSales":104535.37,"grossRev":85939.39,"fee":3119.6,"nett":81507.83},{"club":"Hawthorn","grossSales":755921.93,"grossRev":621159.33,"fee":22353.0,"nett":492190.14},{"club":"Melbourne","grossSales":79534.38,"grossRev":76287.08,"fee":2769.23,"nett":72252.94},{"club":"North Melbourne","grossSales":368725.98,"grossRev":244397.47,"fee":8868.08,"nett":208907.19},{"club":"Port Adelaide","grossSales":196121.17,"grossRev":193609.89,"fee":7028.05,"nett":182511.23},{"club":"St Kilda","grossSales":391573.05,"grossRev":271380.04,"fee":9851.14,"nett":231910.87},{"club":"Sydney","grossSales":313570.26,"grossRev":276861.32,"fee":9902.71,"nett":236996.5},{"club":"West Coast","grossSales":497049.84,"grossRev":279253.36,"fee":10136.93,"nett":261133.32},{"club":"Western Bulldogs","grossSales":182432.81,"grossRev":161825.81,"fee":5874.34,"nett":153058.57}],"products":{"Jan":[{"product":"Collingwood 2026 Mens Member Polo","club":"Collingwood","rev":15544.16},{"product":"2026 AFL Member Scarf","club":"Carlton","rev":13614.8},{"product":"Kangaroos 2026 Members Scarf","club":"North Melbourne","rev":13325.5},{"product":"Hawthorn 2026 Members Scarf","club":"Hawthorn","rev":12455.13},{"product":"2026 Member Cap","club":"Carlton","rev":11114.68},{"product":"Kangaroos 2026 Members Cap","club":"North Melbourne","rev":9196.38},{"product":"West Coast Eagles New Balance Member Cap (2026)","club":"West Coast","rev":8534.5},{"product":"West Coast Eagles New Balance Member Scarf (2026)","club":"West Coast","rev":8327.67},{"product":"2026 Opening Round Function & Reserved Seat","club":"Carlton","rev":8222.71},{"product":"2026 Member Scarf","club":"St Kilda","rev":6690.48},{"product":"Collingwood 2026 Adults Member Cap","club":"Collingwood","rev":6308.83},{"product":"2026 Member Beanie","club":"Carlton","rev":5773.28},{"product":"Collingwood 2026 Adults Member Hood","club":"Collingwood","rev":5663.92},{"product":"2026 Member Polo - Mens","club":"Brisbane","rev":4863.73},{"product":"Collingwood 2026 Nike Mens Sideline Vest","club":"Collingwood","rev":4610.88},{"product":"2026 NB Adult Stickman Training Guernsey - MINT","club":"St Kilda","rev":4561.72},{"product":"Collingwood 2026 Nike Mens Training Singlet","club":"Collingwood","rev":4360.82},{"product":"West Coast Eagles New Balance Member Beanie (2026)","club":"West Coast","rev":3795.75},{"product":"Kangaroos 2026 Media Polo - Adult - Mens","club":"North Melbourne","rev":3755.61},{"product":"West Coast Eagles New Balance Adult Member Bucket Hat (2026)","club":"West Coast","rev":3618.39},{"product":"2026 AFL Home Guernsey","club":"Brisbane","rev":3581.81},{"product":"Hawthorn 2026 UA Mens Home Guernsey","club":"Hawthorn","rev":3546.62},{"product":"Member Bucket Hat","club":"Carlton","rev":3454.91},{"product":"2026 PUMA Men's Team Polo","club":"Carlton","rev":3400.06},{"product":"Collingwood 2026 Nike Adults Windrunner Jacket","club":"Collingwood","rev":3220.05},{"product":"West Coast Eagles New Balance Men's Media Polo Royal (2026)","club":"West Coast","rev":3109.19},{"product":"Collingwood 2026 Womens Member Polo","club":"Collingwood","rev":3090.63},{"product":"Collingwood 2026 Nike Mens Training Tee","club":"Collingwood","rev":2984.55},{"product":"2025 AFL Premiers Guernsey - Mens","club":"Brisbane","rev":2927.3},{"product":"2026 Member Cap","club":"Brisbane","rev":2254.37},{"product":"2026 Member Cap","club":"St Kilda","rev":1818.02},{"product":"2026 Member Scarf","club":"Brisbane","rev":1672.53},{"product":"2026 Member Beanie","club":"St Kilda","rev":981.72},{"product":"2026 Member Beanie","club":"Brisbane","rev":636.31},{"product":"2026 Member Polo - Mens","club":"Gold Coast","rev":63.64}],"Feb":[{"product":"Collingwood 2026 Nike Mens Fly's Coaches Jacket","club":"Collingwood","rev":190018.94},{"product":"Port Adelaide Never Tear Us Apart Scarf Bundle","club":"Port Adelaide","rev":26909.77},{"product":"Port Adelaide Never Tear Us Apart Scarf - Black","club":"Port Adelaide","rev":15586.8},{"product":"2026 AFL Member Scarf","club":"Carlton","rev":15505.5},{"product":"2026 Opening Round Function & Reserved Seat","club":"Carlton","rev":11935.46},{"product":"Kangaroos 2026 Members Scarf","club":"North Melbourne","rev":11260.95},{"product":"2026 Member Cap","club":"Carlton","rev":9932.57},{"product":"Hawthorn 2026 Members Scarf","club":"Hawthorn","rev":9932.22},{"product":"2026 Member Scarf","club":"St Kilda","rev":9926.55},{"product":"Collingwood 2026 Mens Member Polo","club":"Collingwood","rev":9317.37},{"product":"Hawthorn 2026 UA Mens Padded Jacket","club":"Hawthorn","rev":8614.49},{"product":"Western Bulldogs 2026 Member Scarf","club":"Western Bulldogs","rev":8599.29},{"product":"Collingwood 2026 Nike Mens Sideline Vest","club":"Collingwood","rev":7854.5},{"product":"2026 Men's Member Polo","club":"Carlton","rev":7681.15},{"product":"Kangaroos 2026 Members Cap","club":"North Melbourne","rev":7041.86},{"product":"2026 NB Adult Stickman Training Guernsey - MINT","club":"St Kilda","rev":6759.86},{"product":"2026 Member Beanie","club":"Carlton","rev":6614.12},{"product":"SUNS ARE HOT Tee","club":"Gold Coast","rev":6578.33},{"product":"Hawthorn 2026 UA Mens 1/4 Zip Jacket","club":"Hawthorn","rev":5791.36},{"product":"2026 Men's Member Zip Hood","club":"Carlton","rev":5727.55},{"product":"2026 PUMA Men's Team Polo","club":"Carlton","rev":5691.02},{"product":"West Coast Eagles New Balance Member Cap (2026)","club":"West Coast","rev":5604.78},{"product":"Collingwood 2026 Nike Mens Run Out Top","club":"Collingwood","rev":5596.38},{"product":"West Coast Eagles New Balance Member Scarf (2026)","club":"West Coast","rev":5441.28},{"product":"Collingwood 2026 Nike Adults Team Hood","club":"Collingwood","rev":5218.27},{"product":"2026 Member Polo - Mens","club":"Gold Coast","rev":5205.31},{"product":"2026 PUMA Men's Home Guernsey","club":"Carlton","rev":5117.17},{"product":"2026 AFL Home Guernsey","club":"Brisbane","rev":4781.78},{"product":"Collingwood 2026 Adults Member Hood","club":"Collingwood","rev":4772.98},{"product":"2026 Member Polo - Mens","club":"Brisbane","rev":3818.25},{"product":"2026 Member Cap","club":"St Kilda","rev":2690.69},{"product":"2026 Member Scarf","club":"Brisbane","rev":2236.14},{"product":"2026 Member Cap","club":"Brisbane","rev":2108.82},{"product":"2026 Member Beanie","club":"St Kilda","rev":1563.5}]}};
+var $=function(s,el){return (el||document).querySelector(s)};
+var $$=function(s,el){return Array.prototype.slice.call((el||document).querySelectorAll(s))};
+function money(n){if(n>=1e6)return '$'+(n/1e6).toFixed(1)+'M';if(n>=1e3)return '$'+(n/1e3).toFixed(n>=1e5?0:1)+'k';return '$'+Math.round(n).toLocaleString()}
+function moneyFull(n){return '$'+Math.round(n).toLocaleString()}
+function sum(a,k){return a.reduce(function(x,r){return x+(r[k]||0)},0)}
+function toast(m){var t=$('#toast');$('#toastMsg').textContent=m||'Copied';t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show')},1900)}
+
+var titles={overview:['Run your store','Overview'],guide:['Run your store','Shopify Guide'],themes:['Run your store','Themes'],templates:['Run your store','Templates'],emails:['Run your store','Email Templates'],brand:['Run your store','Brand Kit'],apps:['Run your store','App Stack'],reports:['Insights','Reports'],upload:['Insights','Upload & Dashboard']};
+function go(route){
+  if(!titles[route])route='overview';
+  $$('.panel').forEach(function(p){p.classList.toggle('show',p.getAttribute('data-panel')===route)});
+  $$('.nav a').forEach(function(a){a.classList.toggle('active',a.getAttribute('data-route')===route)});
+  $('#crumb').textContent=titles[route][0];$('#ptitle').textContent=titles[route][1];
+  window.scrollTo(0,0);
+  if(location.hash!=='#'+route)history.replaceState(null,'','#'+route);
+  closeSide();
+  if(route==='reports')renderReports();
+}
+document.addEventListener('click',function(e){var a=e.target.closest('[data-route]');if(a){e.preventDefault();go(a.getAttribute('data-route'))}});
+window.addEventListener('hashchange',function(){go(location.hash.replace('#',''))});
+function closeSide(){$('#side').classList.remove('open');$('#scrim').classList.remove('on')}
+$('#menuBtn').addEventListener('click',function(){$('#side').classList.add('open');$('#scrim').classList.add('on')});
+$('#scrim').addEventListener('click',closeSide);
+document.addEventListener('click',function(e){var b=e.target.closest('[data-copy]');if(!b)return;var pre=b.parentNode.querySelector('pre');copy(pre?pre.innerText:'')});
+function copy(txt){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast('Copied to clipboard')},fb)}else fb();function fb(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Copied to clipboard')}catch(_){toast('Copy failed')}document.body.removeChild(ta)}}
+
+function kpi(l,n,s,c){return '<div class="kpi '+(c||'')+'"><div class="k-lab">'+l+'</div><div class="k-num">'+n+'</div><div class="k-sub">'+s+'</div></div>'}
+function renderOverview(){
+  var feb=DATA.months.Feb;var gs=sum(feb,'grossSales'),nett=sum(feb,'nett'),fee=sum(feb,'fee');
+  $('#ovKpis').innerHTML=kpi('Gross sales',money(gs),'across 16 club stores','accent')+kpi('Nett revenue',money(nett),'after fees &amp; refunds')+kpi('Platform fees',money(fee),(fee/sum(feb,'grossRev')*100).toFixed(1)+'% of gross revenue')+kpi('Top club',feb.slice().sort(function(a,b){return b.grossSales-a.grossSales})[0].club,'by online sales');
+}
+var guideTopics=[
+ {id:'products',t:'Products',intro:'How to add and organise the products in your store.',steps:[
+   ['Add a product','Go to Products, then Add product. Give it a clear title, a short description, images and a price. Set it to Active when it is ready.'],
+   ['Set up options','Add options like size and fit (mens, womens, youth). Each combination becomes a variant you can price and track on its own.'],
+   ['Organise it','Use product type and tags, for example membership, headwear or guernsey. Tags are what power collections, filters and clean reporting later.'],
+   ['Stock and code','Add a product code and turn on stock tracking so counts stay accurate across online and in-store.'],
+   ['Publish','Make sure the product is available on the online store, then save.']
+ ]},
+ {id:'collections',t:'Collections',intro:'Group products together so fans can shop by range.',steps:[
+   ['Manual collection','Use this for a curated range you pick by hand, like a featured drop.'],
+   ['Automatic collection','Set a condition, for example tag is membership, and products are added automatically as you tag them.'],
+   ['Image and intro','Add a collection image and a short intro so the page looks intentional.'],
+   ['Order products','Choose how products sort, such as best selling or newest first.'],
+   ['Add to menu','Link the collection in your navigation so people can find it.']
+ ]},
+ {id:'orders',t:'Orders',intro:'From a new order coming in through to fulfilment.',steps:[
+   ['Open an order','Go to Orders and select one to see items, customer and payment.'],
+   ['Fulfil it','Print the shipping label and mark items as fulfilled. The customer is notified automatically.'],
+   ['Split shipments','Send part of an order now and the rest later if stock is on the way.'],
+   ['Refund or cancel','Issue a full or partial refund, or cancel and restock in a couple of clicks.'],
+   ['Notes and tags','Add an order note or tag, for example VIP or gift, to keep things organised.']
+ ]},
+ {id:'inventory',t:'Inventory',intro:'Keep stock accurate across online, in-store and venue.',steps:[
+   ['Turn on tracking','Enable stock tracking on a product so counts update as you sell.'],
+   ['View by location','See stock at each location, such as the online warehouse and the club store.'],
+   ['Low-stock view','Filter to low or out-of-stock items so nothing sells out unnoticed.'],
+   ['Adjust stock','Record a stocktake adjustment with a reason, so the numbers stay honest.'],
+   ['Transfer stock','Move stock between locations and track it while in transit.']
+ ]},
+ {id:'discounts',t:'Discounts',intro:'Run codes, sales and member pricing.',steps:[
+   ['Create a code','Set up a percentage, fixed amount or free shipping code with a start and end date.'],
+   ['Automatic discount','Apply a discount at the checkout with no code needed, for a sale period.'],
+   ['Set limits','Cap total uses, or limit to one per customer, to keep it controlled.'],
+   ['Member pricing','Combine with customer tags to offer members-only pricing.'],
+   ['Track it','Check the discounts report to see how a promotion performed.']
+ ]},
+ {id:'analytics',t:'Analytics',intro:'Read your numbers and export what you need.',steps:[
+   ['The dashboard','Your home for sales, orders and sessions at a glance.'],
+   ['By product and channel','See what is selling, and where the sales are coming from.'],
+   ['Conversion and value','Track conversion rate and average order value over time.'],
+   ['Traffic sources','See which channels bring the most valuable visitors.'],
+   ['Export a report','Export the standard sales report, then drop it into the hub for a clean monthly dashboard.']
+ ]},
+ {id:'theme',t:'Store design',intro:'Change how the store looks and reads.',steps:[
+   ['Open the editor','Go to Online Store, then Customise, to open the visual editor.'],
+   ['Sections and blocks','Add, reorder and edit sections like the hero, featured products and text.'],
+   ['Update the homepage','Feature your latest range and a clear call to action.'],
+   ['Colours and fonts','These pull from your brand kit, so the whole store stays on brand.'],
+   ['Preview and publish','Preview on mobile and desktop, then publish when it is ready.']
+ ]}
+];
+var guideChecklists={
+ launch:['Test orders go through end to end','Emails send and read well on mobile','Shipping rates and pickup are correct','Legal and returns pages are live','Password page removed'],
+ weekly:['Fulfil and post outstanding orders','Reply to customer messages','Check low-stock items','Review the sales for the week','Plan the next drop or campaign'],
+ before:['Duplicate the live design as a backup','Make changes on the copy first','Preview on mobile and desktop','Publish only when happy']
+};
+function renderGuide(){
+  var nav=$('#gtopics');
+  nav.innerHTML=guideTopics.map(function(g){return '<button data-g="'+g.id+'">'+g.t+'</button>'}).join('')+'<button data-g="checklists">Checklists</button>';
+  function show(id){
+    $$('#gtopics button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-g')===id)});
+    var a=$('#garticle');
+    if(id==='checklists'){
+      a.innerHTML='<div class="gah">Checklists</div><div class="gaintro">Quick lists to keep the store healthy.</div><div class="checkcols">'+
+        '<div class="checkcol"><h4>Launch day</h4><ul>'+guideChecklists.launch.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul></div>'+
+        '<div class="checkcol"><h4>Every week</h4><ul>'+guideChecklists.weekly.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul></div>'+
+        '<div class="checkcol"><h4>Before you edit</h4><ul>'+guideChecklists.before.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul></div></div>';
+      return;
+    }
+    var g=guideTopics.filter(function(x){return x.id===id})[0];
+    a.innerHTML='<div class="gah">'+g.t+'</div><div class="gaintro">'+g.intro+'</div>'+g.steps.map(function(st,i){return '<div class="gstep"><div class="gsn">'+String(i+1).padStart(2,'0')+'</div><div><div class="gst">'+st[0]+'</div><div class="gsb">'+st[1]+'</div></div></div>'}).join('');
+  }
+  $$('#gtopics button').forEach(function(b){b.addEventListener('click',function(){show(b.getAttribute('data-g'))})});
+  show('products');
+}
+var themes=[
+ ['Match Day','Version 1.4','#DD5B23','#8f3410',['Game-day drop countdowns','Scarcity and low-stock cues','Fast mobile checkout','Guernsey personaliser built in']],
+ ['Membership','Version 1.2','#2E7D5B','#12463A',['Tiered member gating','Renewal and upsell flows','Reserved-seat add-ons','Members-only collections']],
+ ['Heritage','Version 1.1','#12324F','#0A1E30',['Clean editorial retail','Story and club-history blocks','Lookbook galleries','Built-in size guides']]
+];
+function renderThemes(){
+  $('#themeGrid').innerHTML=themes.map(function(t){
+    return '<div class="theme"><div class="prev" style="background:radial-gradient(120% 120% at 30% 0%,'+t[2]+', '+t[3]+')"></div><div class="tbody"><div class="tname">'+t[0]+'</div><div class="tver">'+t[1]+'</div><ul>'+t[4].map(function(f){return '<li>'+f+'</li>'}).join('')+'</ul><button class="btn" data-theme="'+t[0]+'">Download theme (.zip)</button></div></div>'
+  }).join('');
+  $$('#themeGrid [data-theme]').forEach(function(b){b.addEventListener('click',function(){toast('Demo build ~ '+b.getAttribute('data-theme')+' package coming soon')})});
+}
+var emails=[
+ ['Order confirmation','Triggered on payment','Your {{ CLUB }} order is in','Hi {{ customer.first_name }},\n\nThanks for backing the club. Your order {{ order.name }} is confirmed.\n\nWe will email you the moment it ships. You can view it any time here:\n{{ order.order_status_url }}\n\nUp the club,\nThe {{ CLUB }} Retail Team'],
+ ['Shipping confirmation','Triggered on fulfilment','Your {{ CLUB }} order is on its way','Hi {{ customer.first_name }},\n\nGreat news, {{ order.name }} has left the rooms and is on its way.\n\nTrack it here: {{ fulfillment.tracking_url }}\nCarrier: {{ fulfillment.tracking_company }}\n\nSee you in the stands,\n{{ CLUB }}'],
+ ['Out for delivery','Optional carrier webhook','Out for delivery today','Hi {{ customer.first_name }},\n\n{{ order.name }} is out for delivery and should reach you today.\n\nKeep an eye out, and get ready to wear your colours.\n\n{{ CLUB }}'],
+ ['Ready for pickup','Local pickup ready','Ready to collect at {{ location.name }}','Hi {{ customer.first_name }},\n\nYour order {{ order.name }} is packed and ready to collect from {{ location.name }}.\n\nBring your confirmation email or order number.\n\nSee you soon,\n{{ CLUB }}'],
+ ['Refund notification','Triggered on refund','A refund is on its way','Hi {{ customer.first_name }},\n\nWe have processed a refund of {{ refund_amount }} for {{ order.name }}.\n\nIt can take a few business days to appear, depending on your bank.\n\nThanks for your patience,\n{{ CLUB }} Retail Team'],
+ ['Back in stock','Restock alert','It is back, {{ product.title }}','Hi {{ customer.first_name }},\n\nGood news, {{ product.title }} is back in stock.\n\nThese go fast, so grab yours before they are gone:\n{{ product.url }}\n\n{{ CLUB }}']
+];
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function renderEmails(){
+  $('#mailGrid').innerHTML=emails.map(function(m){
+    return '<div class="mailcard"><div class="mh"><div><div class="msub">'+m[0]+'</div><div class="mmeta">'+m[1]+'</div></div><button class="btn ghost sm" data-copy>Copy</button></div><div class="copywrap"><pre class="code" style="border:none;border-radius:0"><b style="color:var(--ink)">Subject:</b> '+esc(m[2])+'\n\n'+esc(m[3])+'</pre></div></div>'
+  }).join('');
+}
+var bkPresets=[['#12324F','#E4A32B'],['#111111','#D22030'],['#3B1E5E','#F2C14E'],['#0B3D2E','#F4F4F4'],['#1B2A6B','#E01F3D'],['#5A0E1C','#F0C34A']];
+function renderBrand(){
+  $('#bkPresets').innerHTML=bkPresets.map(function(p,i){return '<div class="preset" data-i="'+i+'" style="background:linear-gradient(135deg,'+p[0]+' 60%,'+p[1]+' 60%)"></div>'}).join('');
+  $$('#bkPresets .preset').forEach(function(el){el.addEventListener('click',function(){var p=bkPresets[+el.getAttribute('data-i')];$('#bkPrimary').value=p[0];$('#bkAccent').value=p[1];updateBrand()})});
+  ['bkName','bkPrimary','bkAccent','bkFont'].forEach(function(id){$('#'+id).addEventListener('input',updateBrand)});
+  updateBrand();
+}
+function updateBrand(){
+  var name=$('#bkName').value||'Your Club FC',pri=$('#bkPrimary').value,acc=$('#bkAccent').value,font=$('#bkFont').value;
+  $('#bkPrimaryHex').textContent=pri.toUpperCase();$('#bkAccentHex').textContent=acc.toUpperCase();
+  $('#bkHead').style.background=pri;$('#bkLogo').textContent=name.toUpperCase();$('#bkLogo').style.fontFamily=font;
+  $('#bkHero').style.fontFamily=font;$('#bkHero').style.color=pri;$('#bkCta').style.background=acc;
+  $('#bkPr1').style.color=pri;$('#bkPr2').style.color=pri;$('#bkPr3').style.color=pri;
+  $('#bkP1').style.background='linear-gradient(135deg,'+pri+',#000)';$('#bkP2').style.background='linear-gradient(135deg,'+acc+','+pri+')';$('#bkP3').style.background='linear-gradient(135deg,'+pri+','+acc+')';
+}
+var apps=[
+ ['Reviews','Judge.me / Loox','Photo reviews build trust on fan gear and lift conversion.',true],
+ ['Loyalty','Smile.io','Reward members and repeat buyers, a natural fit for club supporters.',true],
+ ['Email &amp; SMS','Klaviyo','Segment by club, member tier and buying behaviour for smarter campaigns.',true],
+ ['Personalisation','Infinite Options','Powers guernsey name and number, and other custom line-items.',true],
+ ['Shipping','Aus Post / Shippit','Live AU rates, labels and tracking without leaving Shopify.',false],
+ ['Back in stock','Back in Stock','Capture demand on sold-out drops and notify automatically.',false],
+ ['Bundles','Shopify Bundles','Native multi-buy and game-day bundle offers.',false],
+ ['Upsell','ReConvert','Post-purchase upsells to lift average order value.',false]
+];
+function renderApps(){
+  $('#appGrid').innerHTML=apps.map(function(a){
+    return '<div class="card" style="display:flex;gap:16px;align-items:flex-start"><div style="flex:1"><div style="display:flex;gap:9px;align-items:center;margin-bottom:8px"><span class="pill">'+a[0]+'</span>'+(a[3]?'<span class="pill rec">AFL pick</span>':'')+'</div><div style="font-family:\'Playfair Display\';font-weight:600;font-size:15px;color:var(--ink)">'+a[1]+'</div><div style="font-size:13px;color:var(--text);margin-top:5px;line-height:1.5">'+a[2]+'</div></div></div>'
+  }).join('');
+}
+var repState={month:'Feb',club:'All',metric:'grossSales'};
+var metricLabels={grossSales:'gross sales',nett:'nett revenue',fee:'platform fee'};
+function rows(m){return m==='YTD'?DATA.ytd:DATA.months[m]}
+function initReportsControls(){
+  var clubs=DATA.months.Feb.map(function(r){return r.club}).sort();
+  $('#clubSel').innerHTML='<option value="All">All clubs</option>'+clubs.map(function(c){return '<option>'+c+'</option>'}).join('');
+  $('#clubSel').addEventListener('change',function(){repState.club=this.value;renderReports()});
+  $$('#monthSeg button').forEach(function(b){b.addEventListener('click',function(){repState.month=b.getAttribute('data-m');$$('#monthSeg button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');renderReports()})});
+  $$('#metricSeg button').forEach(function(b){b.addEventListener('click',function(){repState.metric=b.getAttribute('data-metric');$$('#metricSeg button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');renderReports()})});
+}
+function monthName(m){return m==='Jan'?'January':m==='Feb'?'February':'YTD Nov-Feb'}
+function renderReports(){
+  var data=rows(repState.month),m=repState.metric;
+  var scope=repState.club==='All'?data:data.filter(function(r){return r.club===repState.club});
+  var gs=sum(scope,'grossSales'),gr=sum(scope,'grossRev'),nett=sum(scope,'nett'),fee=sum(scope,'fee');
+  $('#repKpis').innerHTML=kpi('Gross sales',money(gs),repState.club==='All'?'all clubs':repState.club,'accent')+kpi('Gross revenue',money(gr),'after discounts &amp; credits')+kpi('Nett revenue',money(nett),'after fees &amp; refunds')+kpi('Platform fee',money(fee),(gr?(fee/gr*100).toFixed(1):'0')+'% of gross revenue');
+  var sorted=data.slice().sort(function(a,b){return b[m]-a[m]});var max=sorted[0][m]||1;
+  $('#ladderTitle').textContent='Clubs by '+metricLabels[m];$('#ladderMonth').textContent=monthName(repState.month);
+  $('#repLadder').innerHTML=sorted.map(function(r){var mine=repState.club!=='All'&&r.club===repState.club;return '<div class="brow'+(mine?' mine':'')+'"><div class="bn">'+r.club+'</div><div class="btr"><div class="bfl" style="width:'+(r[m]/max*100).toFixed(1)+'%"></div></div><div class="bv">'+money(r[m])+'</div></div>'}).join('');
+  var pmonth=repState.month==='YTD'?'Feb':repState.month;$('#prodMonth').textContent=monthName(pmonth);
+  var prods=DATA.products[pmonth]||[];if(repState.club!=='All')prods=prods.filter(function(p){return p.club===repState.club});
+  $('#prodBody').innerHTML=prods.slice(0,15).map(function(p,i){return '<tr><td class="rank">'+(i+1)+'</td><td class="club">'+p.product+'</td><td>'+p.club+'</td><td class="num">'+moneyFull(p.rev)+'</td></tr>'}).join('')||'<tr><td colspan="4" style="text-align:center;color:var(--faint)">No products for this club this month</td></tr>';
+  var cd=$('#clubDetail');
+  if(repState.club!=='All'){
+    var jan=DATA.months.Jan.filter(function(r){return r.club===repState.club})[0]||{};var feb=DATA.months.Feb.filter(function(r){return r.club===repState.club})[0]||{};var ytd=DATA.ytd.filter(function(r){return r.club===repState.club})[0]||{};
+    var delta=jan.grossSales?((feb.grossSales-jan.grossSales)/jan.grossSales*100):0;
+    cd.style.display='block';
+    cd.innerHTML='<div class="h2 sm" style="margin-bottom:16px">'+repState.club+' · month on month</div><div class="kpis"><div class="kpi"><div class="k-lab">January</div><div class="k-num">'+money(jan.grossSales||0)+'</div><div class="k-sub">gross sales</div></div><div class="kpi accent"><div class="k-lab">February</div><div class="k-num">'+money(feb.grossSales||0)+'</div><div class="k-sub">gross sales</div></div><div class="kpi"><div class="k-lab">Change</div><div class="k-num '+(delta>=0?'up':'down')+'">'+(delta>=0?'+':'')+delta.toFixed(0)+'%</div><div class="k-sub">Jan to Feb</div></div><div class="kpi"><div class="k-lab">YTD nett</div><div class="k-num">'+money(ytd.nett||0)+'</div><div class="k-sub">Nov-Feb</div></div></div>';
+  } else cd.style.display='none';
+}
+function parseCSV(text){
+  var lines=text.trim().split(/\r?\n/).filter(Boolean);if(!lines.length)return{header:[],rows:[]};
+  var split=function(l){var out=[],cur='',q=false;for(var i=0;i<l.length;i++){var c=l[i];if(c==='"'){q=!q}else if(c===','&&!q){out.push(cur);cur=''}else cur+=c}out.push(cur);return out.map(function(s){return s.trim().replace(/^"|"$/g,'')})};
+  return{header:split(lines[0]),rows:lines.slice(1).map(split)};
+}
+function buildDashboard(parsed){
+  var h=parsed.header.map(function(x){return x.toLowerCase()});
+  var valIdx=-1,valNames=['net sales','total sales','sales','revenue','net revenue','amount','total'];
+  for(var v=0;v<valNames.length&&valIdx<0;v++){valIdx=h.indexOf(valNames[v])}
+  if(valIdx<0){for(var c=parsed.header.length-1;c>=0;c--){var nums=parsed.rows.filter(function(r){return r[c]&&!isNaN(parseFloat(String(r[c]).replace(/[$,]/g,'')))}).length;if(nums>parsed.rows.length*0.6){valIdx=c;break}}}
+  var labIdx=0;for(var l=0;l<parsed.header.length;l++){if(l!==valIdx){labIdx=l;break}}
+  var items=parsed.rows.map(function(r){return{label:r[labIdx]||'-',val:parseFloat(String(r[valIdx]||'0').replace(/[$,]/g,''))||0}}).filter(function(x){return x.val>0});
+  items.sort(function(a,b){return b.val-a.val});
+  var total=items.reduce(function(a,x){return a+x.val},0),avg=items.length?total/items.length:0;
+  $('#upKpis').innerHTML=kpi('Total',money(total),parsed.header[valIdx]||'value','accent')+kpi('Line items',items.length.toLocaleString(),'rows with value')+kpi('Top line',items.length?money(items[0].val):'-',items.length?items[0].label:'')+kpi('Average',money(avg),'per line item');
+  $('#upTitle').textContent='Top lines by '+(parsed.header[valIdx]||'value');
+  var max=items.length?items[0].val:1;
+  $('#upBars').innerHTML=items.slice(0,10).map(function(x){return '<div class="brow"><div class="bn" title="'+x.label+'">'+x.label+'</div><div class="btr"><div class="bfl" style="width:'+(x.val/max*100).toFixed(1)+'%"></div></div><div class="bv">'+money(x.val)+'</div></div>'}).join('');
+  $('#uploadResult').style.display='block';toast('Dashboard built from '+items.length+' rows');
+}
+function handleFile(file){var rd=new FileReader();rd.onload=function(){try{buildDashboard(parseCSV(rd.result))}catch(e){toast('Could not read that file')}};rd.readAsText(file)}
+var sampleCSV='Product,Net sales,Orders\n2026 Member Scarf,15505.50,410\nHome Guernsey,12240.00,72\nMember Cap,9932.57,318\nMembers Beanie,6614.12,240\nTraining Guernsey,6759.86,58\nSideline Vest,7854.50,61\nMens Member Polo,9317.37,120\nMembers Hood,4772.98,44\nBucket Hat,3454.91,110\nMedia Polo,3755.60,38';
+function initUpload(){
+  var drop=$('#drop'),input=$('#fileInput');
+  drop.addEventListener('click',function(){input.click()});
+  input.addEventListener('change',function(){if(input.files[0])handleFile(input.files[0])});
+  ['dragover','dragenter'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.add('hover')})});
+  ['dragleave','drop'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.remove('hover')})});
+  drop.addEventListener('drop',function(e){var f=e.dataTransfer.files[0];if(f)handleFile(f)});
+  $('#loadSample').addEventListener('click',function(){buildDashboard(parseCSV(sampleCSV))});
+  $('#dlSample').addEventListener('click',function(){var blob=new Blob([sampleCSV],{type:'text/csv'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='club-sales-sample.csv';a.click();URL.revokeObjectURL(url);toast('Sample CSV downloaded')});
+}
+var epBrands=[['#12324F','#E4A32B','Your Club FC'],['#1A1A1A','#D22030','City FC'],['#0B3D2E','#F2C14E','United FC']];
+var epActive=0;
+function renderEmailPreview(){
+  var t=$('#epToggle');
+  t.innerHTML=epBrands.map(function(b,i){return '<div class="bt-sw'+(i===epActive?' on':'')+'" data-i="'+i+'" style="background:linear-gradient(135deg,'+b[0]+' 55%,'+b[1]+' 55%)"></div>'}).join('');
+  $$('#epToggle .bt-sw').forEach(function(sw){sw.addEventListener('click',function(){epActive=+sw.getAttribute('data-i');renderEmailPreview()})});
+  var b=epBrands[epActive],pri=b[0],acc=b[1],name=b[2];
+  $('#emailPrev').innerHTML=
+    '<div class="ep-head" style="background:'+pri+'"><div class="ep-logo">'+name.toUpperCase()+'</div></div>'+
+    '<div class="ep-body"><div class="ep-h">Your order is in</div>'+
+    '<div class="ep-p">Hi Georgie, thanks for backing the club. Your order #1024 is confirmed, and we will email you the moment it ships.</div>'+
+    '<div class="ep-order"><div class="ep-line"><span>2026 Member Scarf</span><span>$40.00</span></div><div class="ep-line"><span>Home Guernsey, 12 MORRIS</span><span>$180.00</span></div><div class="ep-line"><span>Shipping</span><span>$10.00</span></div><div class="ep-line tot"><span>Total</span><span>$230.00</span></div></div>'+
+    '<a class="ep-btn" style="background:'+acc+'">View your order</a></div>'+
+    '<div class="ep-foot">Up the club · '+name+' Retail Team</div>';
+}
+function initTemplates(){
+  var n=$('#pmName'),num=$('#pmNum');
+  if(n){n.addEventListener('input',function(){$('#jName').textContent=(n.value||'').toUpperCase()});num.addEventListener('input',function(){$('#jNum').textContent=num.value||''})}
+  $$('#ptTabs button').forEach(function(b){b.addEventListener('click',function(){
+    $$('#ptTabs button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');
+    var map={size:'ptSize',returns:'ptReturns',shipping:'ptShipping'};
+    ['ptSize','ptReturns','ptShipping'].forEach(function(id){$('#'+id).classList.remove('show')});
+    $('#'+map[b.getAttribute('data-pt')]).classList.add('show');
+  })});
+}
+renderOverview();renderGuide();renderThemes();renderEmails();renderEmailPreview();renderBrand();renderApps();initTemplates();initReportsControls();initUpload();
+go(location.hash?location.hash.replace('#',''):'overview');
+</script>
+</body>
+</html>
