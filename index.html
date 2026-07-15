@@ -376,27 +376,6 @@ pre.code{background:var(--paper-2);border:1px solid var(--line);border-radius:10
           </div>
         </div>
         <div class="sec">
-          <div class="h2 sm">Guernsey personaliser ~ product page preview</div>
-          <p class="lead" style="font-size:13.5px;margin-bottom:14px">Type a name and number to see it update on the jersey, exactly as a fan would.</p>
-          <div class="pmock">
-            <div class="pm-vis">
-              <div class="jersey"><span class="sleeve l"></span><span class="sleeve r"></span><div class="collar"></div><div class="jname" id="jName">MORRIS</div><div class="jnum" id="jNum">12</div></div>
-            </div>
-            <div class="pm-info">
-              <div class="pm-t">2026 Home Guernsey</div>
-              <div class="pm-price">$180.00</div>
-              <label>Name on back (max 12)</label>
-              <input id="pmName" maxlength="12" value="MORRIS">
-              <label>Number (1 to 99)</label>
-              <input id="pmNum" type="number" min="1" max="99" value="12">
-              <label>Size</label>
-              <select><option>S</option><option>M</option><option selected>L</option><option>XL</option><option>2XL</option></select>
-              <button class="pm-cta">Add to cart ~ $180.00</button>
-              <div class="pm-hint">Personalisation adds 5 to 7 business days. An order note is generated automatically for fulfilment.</div>
-            </div>
-          </div>
-        </div>
-        <div class="sec">
           <div class="h2 sm">Page templates ~ preview</div>
           <div class="pt-tabs" id="ptTabs" style="margin-top:10px">
             <button data-pt="size" class="on">Size guide</button>
@@ -816,8 +795,6 @@ function renderEmailPreview(){
     '<div class="ep-foot">Up the club · '+name+' Retail Team</div>';
 }
 function initTemplates(){
-  var n=$('#pmName'),num=$('#pmNum');
-  if(n){n.addEventListener('input',function(){$('#jName').textContent=(n.value||'').toUpperCase()});num.addEventListener('input',function(){$('#jNum').textContent=num.value||''})}
   $$('#ptTabs button').forEach(function(b){b.addEventListener('click',function(){
     $$('#ptTabs button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');
     var map={size:'ptSize',returns:'ptReturns',shipping:'ptShipping'};
